@@ -55,14 +55,43 @@ class Test extends TestCase
 
     public function testNotFound(): void
     {
-        $response = $this
-            ->jsonApi()
-            ->get('/api/v1/posts/9999');
+        $expected = [
+            'errors' => [
+                [
+                    'status' => '404',
+                    'title' => 'Not Found',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
 
-        $response->assertExactErrorStatus([
-            'status' => '404',
-            'title' => 'Not Found',
-        ]);
+        $this->get('/foobar', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(404)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testMethodNotAllowed(): void
+    {
+        $expected = [
+            'errors' => [
+                [
+                    'detail' => 'The POST method is not supported for this route. Supported methods: GET, HEAD.',
+                    'status' => '405',
+                    'title' => 'Method Not Allowed',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->post('/test', [], ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(405)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
     }
 
     /**
