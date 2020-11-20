@@ -49,6 +49,7 @@ final class ExceptionParser
     private array $pipes = [
         Pipes\AuthenticationExceptionHandler::class,
         Pipes\HttpExceptionHandler::class,
+        Pipes\RequestExceptionHandler::class,
         Pipes\ValidationExceptionHandler::class,
     ];
 

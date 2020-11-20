@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -324,6 +325,51 @@ class Test extends TestCase
 
         $this->get('/test', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(403)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testRequestException(): void
+    {
+        $this->ex = new BadRequestException('Your request is badly formatted.');
+
+        $expected = [
+            'errors' => [
+                [
+                    'detail' => 'Your request is badly formatted.',
+                    'status' => '400',
+                    'title' => 'Bad Request',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testRequestExceptionWithoutMessage(): void
+    {
+        $this->ex = new BadRequestException();
+
+        $expected = [
+            'errors' => [
+                [
+                    'status' => '400',
+                    'title' => 'Bad Request',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
             ->assertExactJson($expected);
     }
