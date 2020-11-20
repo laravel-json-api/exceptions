@@ -5,7 +5,6 @@
         "jsonapi.org",
         "json-api",
         "jsonapi",
-        "json:api",
         "laravel"
     ],
     "homepage": "https://github.com/laravel-json-api/eloquent",
@@ -23,35 +22,17 @@
             "email": "contact@gammie.co.uk"
         }
     ],
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../core"
-        },
-        {
-            "type": "path",
-            "url": "../validation"
-        },
-        {
-            "type": "path",
-            "url": "../testing"
-        },
-        {
-            "type": "path",
-            "url": "../spec"
-        }
-    ],
     "require": {
         "php": "^7.4",
         "ext-json": "*",
         "illuminate/contracts": "^8.0",
         "illuminate/pipeline": "^8.0",
-        "laravel-json-api/core": "*"
+        "laravel-json-api/core": "^1.0"
     },
     "require-dev": {
-        "laravel-json-api/spec": "*",
-        "laravel-json-api/testing": "*",
-        "laravel-json-api/validation": "*",
+        "laravel-json-api/spec": "^1.0",
+        "laravel-json-api/testing": "^1.0",
+        "laravel-json-api/validation": "^1.0",
         "orchestra/testbench": "^6.4",
         "phpunit/phpunit": "^9.4"
     },
