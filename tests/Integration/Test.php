@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
+use LaravelJsonApi\Spec\UnexpectedDocumentException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
@@ -441,6 +442,102 @@ class Test extends TestCase
 
         $this->get('/test', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(422)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testUnexpectedDocument(): void
+    {
+        $this->ex = new UnexpectedDocumentException('That document is wrong.');
+
+        $expected = [
+            'errors' => [
+                [
+                    'detail' => 'That document is wrong.',
+                    'title' => 'Invalid JSON',
+                    'status' => '400',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testUnexpectedDocumentWithoutMessage(): void
+    {
+        $this->ex = new UnexpectedDocumentException();
+
+        $expected = [
+            'errors' => [
+                [
+                    'title' => 'Invalid JSON',
+                    'status' => '400',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testUnexpectedDocumentWithJsonException(): void
+    {
+        $json = new \JsonException('Bad format.', 4);
+
+        $this->ex = new UnexpectedDocumentException('That document is wrong.', 0, $json);
+
+        $expected = [
+            'errors' => [
+                [
+                    'code' => '4',
+                    'detail' => 'Bad format.',
+                    'title' => 'Invalid JSON',
+                    'status' => '400',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testUnexpectedDocumentWithJsonExceptionWithoutMessage(): void
+    {
+        $json = new \JsonException('', 4);
+
+        $this->ex = new UnexpectedDocumentException('That document is wrong.', 0, $json);
+
+        $expected = [
+            'errors' => [
+                [
+                    'code' => '4',
+                    'title' => 'Invalid JSON',
+                    'status' => '400',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(400)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
             ->assertExactJson($expected);
     }

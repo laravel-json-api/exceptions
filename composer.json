@@ -35,6 +35,10 @@
         {
             "type": "path",
             "url": "../testing"
+        },
+        {
+            "type": "path",
+            "url": "../spec"
         }
     ],
     "require": {
@@ -45,6 +49,7 @@
         "laravel-json-api/core": "*"
     },
     "require-dev": {
+        "laravel-json-api/spec": "*",
         "laravel-json-api/testing": "*",
         "laravel-json-api/validation": "*",
         "orchestra/testbench": "^6.4",
