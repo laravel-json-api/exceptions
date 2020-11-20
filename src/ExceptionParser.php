@@ -20,19 +20,37 @@ declare(strict_types=1);
 namespace LaravelJsonApi\Exceptions;
 
 use Closure;
-use Illuminate\Auth\AuthenticationException;
+use Illuminate\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Enumerable;
 use LaravelJsonApi\Core\Document\Error;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
 use LaravelJsonApi\Core\Responses\ErrorResponse;
-use LaravelJsonApi\Validation\Factory;
-use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Throwable;
 
-class ExceptionParser
+final class ExceptionParser
 {
+
+    /**
+     * @var Pipeline
+     */
+    private Pipeline $pipeline;
+
+    /**
+     * @var Error|null
+     */
+    private ?Error $default = null;
+
+    /**
+     * @var array
+     */
+    private array $pipes = [
+        Pipes\AuthenticationExceptionHandler::class,
+        Pipes\HttpExceptionHandler::class,
+        Pipes\ValidationExceptionHandler::class,
+    ];
 
     /**
      * Get an exception renderer closure.
@@ -41,9 +59,8 @@ class ExceptionParser
      */
     public static function renderer(): Closure
     {
-        return static function (Throwable $ex, $request) {
-            return static::make()->render($request, $ex);
-        };
+        return static fn(Throwable $ex, $request) => self::make()
+            ->render($request, $ex);
     }
 
     /**
@@ -53,7 +70,71 @@ class ExceptionParser
      */
     public static function make(): self
     {
-        return new static();
+        return new self(new Pipeline(Container::getInstance()));
+    }
+
+    /**
+     * ExceptionParser constructor.
+     *
+     * @param Pipeline $pipeline
+     */
+    public function __construct(Pipeline $pipeline)
+    {
+        $this->pipeline = $pipeline;
+    }
+
+    /**
+     * Use the provided pipes to parse exceptions.
+     *
+     * @param array|null $pipes
+     * @return $this
+     */
+    public function using(?array $pipes): self
+    {
+        if (is_array($pipes)) {
+            $this->pipes = $pipes;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add pipes before the existing pipes.
+     *
+     * @param array $pipes
+     * @return $this
+     */
+    public function prepend(array $pipes): self
+    {
+        $this->pipes = array_merge($pipes, $this->pipes);
+
+        return $this;
+    }
+
+    /**
+     * Add pipes to the end of the existing pipes.
+     *
+     * @param array $pipes
+     * @return $this
+     */
+    public function append(array $pipes): self
+    {
+        $this->pipes = array_merge($this->pipes, $pipes);
+
+        return $this;
+    }
+
+    /**
+     * Use the provided error as the default error.
+     *
+     * @param Error|Enumerable|array $error
+     * @return $this
+     */
+    public function withDefault($error): self
+    {
+        $this->default = Error::cast($error);
+
+        return $this;
     }
 
     /**
@@ -61,7 +142,7 @@ class ExceptionParser
      *
      * @param Request $request
      * @param Throwable $ex
-     * @return Response|mixed
+     * @return Response|mixed|null
      */
     public function render($request, Throwable $ex)
     {
@@ -97,6 +178,8 @@ class ExceptionParser
     }
 
     /**
+     * Parse the exception to an error response.
+     *
      * @param \Illuminate\Http\Request $request
      * @param Throwable $ex
      * @return ErrorResponse
@@ -107,72 +190,11 @@ class ExceptionParser
             return $ex->prepareResponse($request);
         }
 
-        if ($ex instanceof HttpExceptionInterface) {
-            $response = new ErrorResponse($this->getHttpError($ex));
-            return $response->withHeaders($ex->getHeaders());
-        }
-
-        if ($ex instanceof ValidationException) {
-            return new ErrorResponse($this->getValidationErrors($ex));
-        }
-
-        if ($ex instanceof AuthenticationException) {
-            return new ErrorResponse($this->getAuthenticationError($ex));
-        }
-
-        return new ErrorResponse($this->getDefaultError());
-    }
-
-    /**
-     * Convert a validation exception to JSON API errors.
-     *
-     * @param ValidationException $ex
-     * @return iterable|mixed
-     */
-    protected function getValidationErrors(ValidationException $ex): iterable
-    {
-        return $this->factory()->createErrors($ex->validator);
-    }
-
-    /**
-     * @param AuthenticationException $ex
-     * @return Error
-     */
-    protected function getAuthenticationError(AuthenticationException $ex): Error
-    {
-        return Error::make()
-            ->setStatus(401)
-            ->setTitle($this->getHttpTitle(401))
-            ->setDetail(__($ex->getMessage()));
-    }
-
-    /**
-     * Convert a HTTP exception to a JSON API error.
-     *
-     * @param HttpExceptionInterface $ex
-     * @return Error
-     */
-    protected function getHttpError(HttpExceptionInterface $ex): Error
-    {
-        return Error::make()
-            ->setStatus($status = $ex->getStatusCode())
-            ->setTitle($this->getHttpTitle($status))
-            ->setDetail(__($ex->getMessage()));
-    }
-
-    /**
-     * Convert a HTTP status code to a human-readable title.
-     *
-     * @param int|null $status
-     * @return string|null
-     */
-    protected function getHttpTitle(?int $status): ?string
-    {
-        if ($status && isset(Response::$statusTexts[$status])) {
-            return __(Response::$statusTexts[$status]);
-        }
-
-        return null;
+        return $this->pipeline
+            ->send($ex)
+            ->through($this->pipes)
+            ->via('handle')
+            ->then(fn() => new ErrorResponse($this->getDefaultError()));
     }
 
     /**
@@ -180,20 +202,15 @@ class ExceptionParser
      *
      * @return Error
      */
-    protected function getDefaultError(): Error
+    private function getDefaultError(): Error
     {
+        if ($this->default) {
+            return $this->default;
+        }
+
         return Error::make()
             ->setStatus(500)
-            ->setTitle($this->getHttpTitle(500));
+            ->setTitle(__(Response::$statusTexts[500]));
     }
 
-    /**
-     * Get the validation error factory.
-     *
-     * @return Factory
-     */
-    protected function factory(): Factory
-    {
-        return app(Factory::class);
-    }
 }
