@@ -1,6 +1,6 @@
 {
     "name": "laravel-json-api/exceptions",
-    "description": "Exception parsing for Laravel applications.",
+    "description": "JSON API exception parsing for Laravel applications.",
     "keywords": [
         "jsonapi.org",
         "json-api",

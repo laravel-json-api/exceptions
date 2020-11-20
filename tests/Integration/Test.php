@@ -117,6 +117,27 @@ class Test extends TestCase
             ->assertExactJson($expected);
     }
 
+    public function testMaintenanceModeWithoutMessage(): void
+    {
+        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60);
+
+        $expected = [
+            'errors' => [
+                [
+                    'title' => 'Service Unavailable',
+                    'status' => '503',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(503)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
 
     /**
      * By default Laravel sends a 419 response for a TokenMismatchException.
@@ -131,6 +152,27 @@ class Test extends TestCase
             'errors' => [
                 [
                     'detail' => 'The token is not valid.',
+                    'status' => '419',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(419)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testTokenMismatchWithoutMessage(): void
+    {
+        $this->ex = new TokenMismatchException();
+
+        $expected = [
+            'errors' => [
+                [
                     'status' => '419',
                 ],
             ],
@@ -174,6 +216,28 @@ class Test extends TestCase
             ->assertExactJson($expected);
     }
 
+    public function testHttpExceptionWithoutMessageAndHeaders(): void
+    {
+        $this->ex = new HttpException(418);
+
+        $expected = [
+            'errors' => [
+                [
+                    'title' => "I'm a teapot",
+                    'status' => '418',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
     public function testAuthenticationException(): void
     {
         $this->ex = new AuthenticationException('You must sign in.');
@@ -197,6 +261,28 @@ class Test extends TestCase
             ->assertExactJson($expected);
     }
 
+    public function testAuthenticationExceptionWithoutMessage(): void
+    {
+        $this->ex = new AuthenticationException(null);
+
+        $expected = [
+            'errors' => [
+                [
+                    'status' => '401',
+                    'title' => 'Unauthorized',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(401)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
     public function testAuthorizationException(): void
     {
         $this->ex = new AuthorizationException('Access denied.');
@@ -205,6 +291,28 @@ class Test extends TestCase
             'errors' => [
                 [
                     'detail' => 'Access denied.',
+                    'status' => '403',
+                    'title' => 'Forbidden',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(403)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testAuthorizationExceptionWithoutMessage(): void
+    {
+        $this->ex = new AuthorizationException('');
+
+        $expected = [
+            'errors' => [
+                [
                     'status' => '403',
                     'title' => 'Forbidden',
                 ],
