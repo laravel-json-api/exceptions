@@ -65,8 +65,6 @@ class AuthenticationExceptionHandler
      */
     private function toError(AuthenticationException $ex): Error
     {
-        $message = $ex->getMessage();
-
         return Error::make()
             ->setStatus(401)
             ->setTitle($this->getTitle(401))
