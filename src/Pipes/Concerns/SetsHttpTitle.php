@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelJsonApi\Exceptions\Pipes\Concerns;
 
-use Illuminate\Http\Response;
 use Illuminate\Contracts\Translation\Translator;
+use Illuminate\Http\Response;
 
 trait SetsHttpTitle
 {
