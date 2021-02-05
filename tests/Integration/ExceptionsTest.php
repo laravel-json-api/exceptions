@@ -34,7 +34,7 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
-class Test extends TestCase
+class ExceptionsTest extends TestCase
 {
 
     /**
