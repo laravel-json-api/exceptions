@@ -11,6 +11,12 @@ All notable changes to this project will be documented in this file. This projec
 - Allow a developer to provide a callback to determine if an exception should be rendered as JSON:API via the
   parser's `accept()` method.
 
+### Changed
+
+- **BREAKING** Made method signatures on the `ExceptionParser` class consistent, so that they now take the exception as
+  the first argument and the request as the second. (Previously some had these the other way round.) This makes the
+  signatures consistent with the order of arguments that Laravel uses when calling render callbacks.
+
 ## [1.0.0-alpha.1] - 2021-01-25
 
 Initial release.
