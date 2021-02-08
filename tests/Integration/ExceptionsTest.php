@@ -32,6 +32,7 @@ use LaravelJsonApi\Core\Exceptions\JsonApiException;
 use LaravelJsonApi\Spec\UnexpectedDocumentException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Throwable;
 
 class ExceptionsTest extends TestCase
@@ -90,6 +91,31 @@ class ExceptionsTest extends TestCase
         ];
 
         $this->post('/test', [], ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(405)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    /**
+     * @see https://github.com/laravel-json-api/laravel/issues/21
+     */
+    public function testMethodNotAllowedHttpException(): void
+    {
+        $expected = [
+            'errors' => [
+                [
+                    'status' => '405',
+                    'title' => 'Method Not Allowed',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->ex = new MethodNotAllowedHttpException(['GET', 'POST']);
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(405)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
             ->assertExactJson($expected);
