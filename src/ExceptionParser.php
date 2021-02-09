@@ -44,6 +44,11 @@ final class ExceptionParser
     private ?Error $default = null;
 
     /**
+     * @var Closure|null
+     */
+    private ?Closure $accept = null;
+
+    /**
      * @var array
      */
     private array $pipes = [
@@ -61,8 +66,7 @@ final class ExceptionParser
      */
     public static function renderer(): Closure
     {
-        return static fn(Throwable $ex, $request) => self::make()
-            ->render($request, $ex);
+        return self::make()->renderable();
     }
 
     /**
@@ -142,15 +146,15 @@ final class ExceptionParser
     /**
      * Render the exception, if the request wants the JSON API media type.
      *
-     * @param Request $request
      * @param Throwable $ex
+     * @param Request|mixed $request
      * @return Response|mixed|null
      */
-    public function render($request, Throwable $ex)
+    public function render(Throwable $ex, $request)
     {
-        if ($this->isRenderable($request, $ex)) {
+        if ($this->isRenderable($ex, $request)) {
             return $this
-                ->parse($request, $ex)
+                ->parse($ex, $request)
                 ->toResponse($request);
         }
 
@@ -164,12 +168,16 @@ final class ExceptionParser
      * for the client. We need to do this if the client has requested JSON
      * API via its Accept header.
      *
-     * @param Request $request
      * @param Throwable $e
+     * @param Request|mixed $request
      * @return bool
      */
-    public function isRenderable($request, Throwable $e): bool
+    public function isRenderable(Throwable $e, $request): bool
     {
+        if (true === $this->mustAccept($e, $request)) {
+            return true;
+        }
+
         if ($e instanceof JsonApiException) {
             return true;
         }
@@ -182,11 +190,11 @@ final class ExceptionParser
     /**
      * Parse the exception to an error response.
      *
-     * @param \Illuminate\Http\Request $request
      * @param Throwable $ex
+     * @param Request|mixed $request
      * @return ErrorResponse
      */
-    public function parse($request, Throwable $ex): ErrorResponse
+    public function parse(Throwable $ex, $request): ErrorResponse
     {
         if ($ex instanceof JsonApiException) {
             return $ex->prepareResponse($request);
@@ -197,6 +205,49 @@ final class ExceptionParser
             ->through($this->pipes)
             ->via('handle')
             ->then(fn() => new ErrorResponse($this->getDefaultError()));
+    }
+
+    /**
+     * @return $this
+     */
+    public function acceptsJson(): self
+    {
+        $this->accept = static fn($ex, $request) => $request->wantsJson();
+
+        return $this;
+    }
+
+    /**
+     * @param Closure $callback
+     * @return $this
+     */
+    public function accept(Closure $callback): self
+    {
+        $this->accept = $callback;
+
+        return $this;
+    }
+
+    /**
+     * @return Closure
+     */
+    public function renderable(): Closure
+    {
+        return fn(Throwable $ex, $request) => $this->render($ex, $request);
+    }
+
+    /**
+     * @param Throwable $ex
+     * @param $request
+     * @return bool
+     */
+    private function mustAccept(Throwable $ex, $request): bool
+    {
+        if ($this->accept) {
+            return ($this->accept)($ex, $request);
+        }
+
+        return false;
     }
 
     /**
