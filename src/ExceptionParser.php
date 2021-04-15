@@ -210,9 +210,30 @@ final class ExceptionParser
     /**
      * @return $this
      */
+    public function acceptsAll(): self
+    {
+        $this->accept = static fn($ex, $request) => true;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
     public function acceptsJson(): self
     {
         $this->accept = static fn($ex, $request) => $request->wantsJson();
+
+        return $this;
+    }
+
+    /**
+     * @param $middleware
+     * @return $this
+     */
+    public function acceptsMiddleware($middleware): self
+    {/**@var Request $request*/
+        $this->accept = static fn($ex, $request) => in_array($middleware,$request->route()->gatherMiddleware());
 
         return $this;
     }
