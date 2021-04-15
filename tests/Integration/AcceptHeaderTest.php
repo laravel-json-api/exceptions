@@ -204,6 +204,42 @@ class AcceptHeaderTest extends TestCase
             ->assertExactJson($this->jsonApi);
     }
 
+    /**
+     * We should be able to accept multiple accept callbacks. For example,
+     * if we wanted to render JSON:API errors if the client accepts JSON
+     * or if a particular middleware matches.
+     */
+    public function testMultipleAcceptCallbacks1(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsJson()
+            ->acceptsMiddleware('foo', 'bar')
+            ->renderable();
+
+        $this->get('/test', ['Accept' => 'application/json'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($this->jsonApi);
+    }
+
+    /**
+     * We should be able to accept multiple accept callbacks. For example,
+     * if we wanted to render JSON:API errors if the client accepts JSON
+     * or if a particular middleware matches.
+     */
+    public function testMultipleAcceptCallbacks2(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsMiddleware('api')
+            ->acceptsJson()
+            ->renderable();
+
+        $this->get('/test', ['Accept' => '*/*'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($this->jsonApi);
+    }
+
     public function testHtml(): void
     {
         $this->get('/test', ['Accept' => '*/*'])

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## Unreleased
+
+### Added
+
+- Multiple `accept*` helpers can now be added to the exception parser. This is useful when there are multiple different
+  circumstances where you want to force the parser to render JSON:API errors - for example, if the client accepts JSON
+  *or* if the current route has the `api` middleware. When multiple accept helpers are used, the parser will render
+  JSON:API errors if *any* of the helpers return `true`.
+
 ## [1.0.0-beta.2] - 2021-04-15
 
 ### Added
