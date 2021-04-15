@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## Unreleased
+
+### Added
+
+- [#1](https://github.com/laravel-json-api/exceptions/pull/1) The `ExceptionParser` now has the `acceptsAll()`
+  and `acceptsMiddleware()` helper methods, for determining whether JSON:API errors should be rendered.
+
 ## [1.0.0-beta.1] - 2021-03-30
 
 Initial beta release, no changes since `alpha.2`.

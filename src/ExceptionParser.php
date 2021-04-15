@@ -24,6 +24,7 @@ use Illuminate\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use LaravelJsonApi\Core\Document\Error;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
@@ -208,37 +209,47 @@ final class ExceptionParser
     }
 
     /**
+     * Always render JSON:API exceptions.
+     *
      * @return $this
      */
     public function acceptsAll(): self
     {
-        $this->accept = static fn($ex, $request) => true;
+        $this->accept = static fn(): bool => true;
 
         return $this;
     }
 
     /**
+     * Always render JSON:API errors if the client accepts JSON.
+     *
      * @return $this
      */
     public function acceptsJson(): self
     {
-        $this->accept = static fn($ex, $request) => $request->wantsJson();
+        $this->accept = static fn($ex, $request): bool => $request->wantsJson();
 
         return $this;
     }
 
     /**
-     * @param $middleware
+     * Always render JSON:API errors if the current route has *any* of the provided middleware.
+     *
+     * @param mixed ...$middleware
      * @return $this
      */
-    public function acceptsMiddleware($middleware): self
-    {/**@var Request $request*/
-        $this->accept = static fn($ex, $request) => in_array($middleware,$request->route()->gatherMiddleware());
+    public function acceptsMiddleware(...$middleware): self
+    {
+        $this->accept = static fn($ex, $request): bool => Collection::make($middleware)
+            ->intersect($request->route()->gatherMiddleware())
+            ->isNotEmpty();
 
         return $this;
     }
 
     /**
+     * Use the provided closure to determine if JSON:API errors should be rendered.
+     *
      * @param Closure $callback
      * @return $this
      */

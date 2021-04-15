@@ -40,7 +40,7 @@ class AcceptHeaderTest extends TestCase
     {
         parent::setUp();
 
-        Route::get('/test', function () {
+        Route::middleware('api')->get('/test', function () {
             throw new HttpException(
                 418,
                 "I think I might be a teapot.",
@@ -117,6 +117,50 @@ class AcceptHeaderTest extends TestCase
             ->assertStatus(418)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
             ->assertExactJson($this->jsonApi);
+    }
+
+    /**
+     * Test the `acceptsAll()` helper method, which ensures exceptions
+     * are always rendered as JSON:API.
+     */
+    public function testAcceptsAll(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsAll()
+            ->renderable();
+
+        $this->get('/test', ['Accept' => '*/*'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($this->jsonApi);
+    }
+
+    /**
+     * Test the `acceptsMiddleware()` helper method. This should render JSON:API
+     * errors if any of the provided middleware matches.
+     */
+    public function testAcceptsMiddlewareMatches(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsMiddleware('foo', 'api')
+            ->renderable();
+
+        $this->get('/test', ['Accept' => '*/*'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($this->jsonApi);
+    }
+
+    public function testAcceptsMiddlewareDoesNotMatch(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsMiddleware('foo', 'bar')
+            ->renderable();
+
+        $this->get('/test', ['Accept' => '*/*'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
+            ->assertSee('teapot');
     }
 
     /**
