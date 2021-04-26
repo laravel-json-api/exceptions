@@ -45,9 +45,14 @@ final class ExceptionParser
     private ?Error $default = null;
 
     /**
-     * @var Closure|null
+     * @var bool
      */
-    private ?Closure $accept = null;
+    private bool $alwaysRender = false;
+
+    /**
+     * @var Closure[]
+     */
+    private array $accept = [];
 
     /**
      * @var array
@@ -175,7 +180,7 @@ final class ExceptionParser
      */
     public function isRenderable(Throwable $e, $request): bool
     {
-        if (true === $this->mustAccept($e, $request)) {
+        if ($this->alwaysRender || $this->mustAccept($e, $request)) {
             return true;
         }
 
@@ -215,7 +220,7 @@ final class ExceptionParser
      */
     public function acceptsAll(): self
     {
-        $this->accept = static fn(): bool => true;
+        $this->alwaysRender = true;
 
         return $this;
     }
@@ -227,7 +232,7 @@ final class ExceptionParser
      */
     public function acceptsJson(): self
     {
-        $this->accept = static fn($ex, $request): bool => $request->wantsJson();
+        $this->accept[] = static fn($ex, $request): bool => $request->wantsJson();
 
         return $this;
     }
@@ -240,7 +245,7 @@ final class ExceptionParser
      */
     public function acceptsMiddleware(...$middleware): self
     {
-        $this->accept = static fn($ex, $request): bool => Collection::make($middleware)
+        $this->accept[] = static fn($ex, $request): bool => Collection::make($middleware)
             ->intersect($request->route()->gatherMiddleware())
             ->isNotEmpty();
 
@@ -255,7 +260,7 @@ final class ExceptionParser
      */
     public function accept(Closure $callback): self
     {
-        $this->accept = $callback;
+        $this->accept[] = $callback;
 
         return $this;
     }
@@ -275,8 +280,10 @@ final class ExceptionParser
      */
     private function mustAccept(Throwable $ex, $request): bool
     {
-        if ($this->accept) {
-            return ($this->accept)($ex, $request);
+        foreach ($this->accept as $fn) {
+            if (true === $fn($ex, $request)) {
+                return true;
+            }
         }
 
         return false;
