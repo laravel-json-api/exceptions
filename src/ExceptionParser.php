@@ -62,7 +62,6 @@ final class ExceptionParser
         Pipes\AuthenticationExceptionHandler::class,
         Pipes\HttpExceptionHandler::class,
         Pipes\RequestExceptionHandler::class,
-        Pipes\UnexpectedDocumentExceptionHandler::class,
         Pipes\ValidationExceptionHandler::class,
     ];
 
