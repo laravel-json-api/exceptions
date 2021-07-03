@@ -25,6 +25,8 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\Exceptions\MaintenanceModeException;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
@@ -568,8 +570,10 @@ class ExceptionsTest extends TestCase
             ->assertExactJson($expected);
     }
 
-    public function testGenericException(): void
+    public function testDefaultExceptionWithoutDebug(): void
     {
+        config()->set('app.debug', false);
+
         $this->ex = new \Exception('Boom.');
 
         $expected = [
@@ -577,6 +581,40 @@ class ExceptionsTest extends TestCase
                 [
                     'title' => 'Internal Server Error',
                     'status' => '500',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(500)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    public function testDefaultExceptionWithDebug(): void
+    {
+        config()->set('app.debug', true);
+
+        $this->ex = $ex = new \LogicException('Boom.', 99);
+
+        $expected = [
+            'errors' => [
+                [
+                    'code' => (string) $ex->getCode(),
+                    'detail' => $ex->getMessage(),
+                    'meta' => [
+                        'exception' => get_class($ex),
+                        'file' => $ex->getFile(),
+                        'line' => $ex->getLine(),
+                        'trace' => Collection::make($ex->getTrace())
+                            ->map(fn($trace) => Arr::except($trace, ['args']))
+                            ->all(),
+                    ],
+                    'status' => '500',
+                    'title' => 'Internal Server Error',
                 ],
             ],
             'jsonapi' => [
