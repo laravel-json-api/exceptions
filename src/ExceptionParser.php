@@ -24,6 +24,7 @@ use Illuminate\Container\Container;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Pipeline\Pipeline;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use LaravelJsonApi\Core\Document\Error;
@@ -61,7 +62,6 @@ final class ExceptionParser
         Pipes\AuthenticationExceptionHandler::class,
         Pipes\HttpExceptionHandler::class,
         Pipes\RequestExceptionHandler::class,
-        Pipes\UnexpectedDocumentExceptionHandler::class,
         Pipes\ValidationExceptionHandler::class,
     ];
 
@@ -210,7 +210,7 @@ final class ExceptionParser
             ->send($ex)
             ->through($this->pipes)
             ->via('handle')
-            ->then(fn() => new ErrorResponse($this->getDefaultError()));
+            ->then(fn(Throwable $ex) => new ErrorResponse($this->getDefaultError($ex)));
     }
 
     /**
@@ -292,17 +292,48 @@ final class ExceptionParser
     /**
      * Get the default JSON API error.
      *
+     * @param Throwable $ex
      * @return Error
      */
-    private function getDefaultError(): Error
+    private function getDefaultError(Throwable $ex): Error
     {
         if ($this->default) {
             return $this->default;
         }
 
-        return Error::make()
+        $error = Error::make()
             ->setStatus(500)
             ->setTitle(__(Response::$statusTexts[500]));
+
+        if (config('app.debug')) {
+            $error->setCode($ex->getCode())
+                ->setDetail($ex->getMessage())
+                ->setMeta($this->convertExceptionToMeta($ex));
+        }
+
+        return $error;
+    }
+
+    /**
+     * Convert the provided exception to error meta.
+     *
+     * In this method we mirror the information that Laravel's exception handler
+     * puts into its JSON representation of an exception when in debug mode.
+     *
+     * @param Throwable $ex
+     * @return array
+     * @see \Illuminate\Foundation\Exceptions\Handler::convertExceptionToArray()
+     */
+    private function convertExceptionToMeta(Throwable $ex): array
+    {
+        return [
+            'exception' => get_class($ex),
+            'file' => $ex->getFile(),
+            'line' => $ex->getLine(),
+            'trace' => Collection::make($ex->getTrace())
+                ->map(fn($trace) => Arr::except($trace, ['args']))
+                ->all(),
+        ];
     }
 
 }

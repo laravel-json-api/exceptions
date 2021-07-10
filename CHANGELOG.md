@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## [1.0.0-beta.4] - 2021-07-10
+
+### Added
+
+- When converting an exception to the default JSON:API error, detailed exception information will now be added to the
+  JSON:API error if the application is running in debug mode. The exception code will be added to the `code` member, and
+  the actual exception message to the `detail` member. The `meta` member will contain the exception class, file, line
+  number and stack trace.
+
+### Removed
+
+- This package no longer handles the `UnexpectedDocumentException` from the `laravel-json-api/spec` package. The
+  exception has been removed from that package, and it instead throws a `JsonApiException` if it cannot decode a JSON
+  string.
+
 ## [1.0.0-beta.3] - 2021-04-26
 
 ### Added
