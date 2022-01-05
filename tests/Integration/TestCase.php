@@ -20,11 +20,20 @@ declare(strict_types=1);
 namespace LaravelJsonApi\Exceptions\Tests\Integration;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Testing\Concerns\InteractsWithDeprecationHandling;
 use LaravelJsonApi\Testing\TestExceptionHandler;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
+    use InteractsWithDeprecationHandling;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->withoutDeprecationHandling();
+    }
 
     /**
      * @inheritDoc
