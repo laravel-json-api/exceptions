@@ -321,11 +321,12 @@ class ExceptionsTest extends TestCase
 
     public function testAuthenticationExceptionWithoutMessage(): void
     {
-        $this->ex = new AuthenticationException(null);
+        $this->ex = new AuthenticationException('Denied');
 
         $expected = [
             'errors' => [
                 [
+                    'detail' => 'Denied',
                     'status' => '401',
                     'title' => 'Unauthorized',
                 ],
