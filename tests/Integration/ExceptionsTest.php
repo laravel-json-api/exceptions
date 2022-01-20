@@ -177,7 +177,7 @@ class ExceptionsTest extends TestCase
 
     public function testMaintenanceModeWithoutMessage(): void
     {
-        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60);
+        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60, '');
 
         $expected = [
             'errors' => [
