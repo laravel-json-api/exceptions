@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2021 Cloud Creativity Limited
+ * Copyright 2022 Cloud Creativity Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,7 +177,7 @@ class ExceptionsTest extends TestCase
 
     public function testMaintenanceModeWithoutMessage(): void
     {
-        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60);
+        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60, '');
 
         $expected = [
             'errors' => [
@@ -321,11 +321,12 @@ class ExceptionsTest extends TestCase
 
     public function testAuthenticationExceptionWithoutMessage(): void
     {
-        $this->ex = new AuthenticationException(null);
+        $this->ex = new AuthenticationException('Denied');
 
         $expected = [
             'errors' => [
                 [
+                    'detail' => 'Denied',
                     'status' => '401',
                     'title' => 'Unauthorized',
                 ],
