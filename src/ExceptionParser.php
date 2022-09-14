@@ -245,9 +245,13 @@ final class ExceptionParser
      */
     public function acceptsMiddleware(...$middleware): self
     {
-        $this->accept[] = static fn($ex, $request): bool => Collection::make($middleware)
-            ->intersect($request->route()->gatherMiddleware())
-            ->isNotEmpty();
+        $this->accept[] = static function ($ex, $request) use ($middleware): bool {
+            $route = $request->route();
+
+            return Collection::make($middleware)
+                ->intersect($route ? $route->gatherMiddleware() : [])
+                ->isNotEmpty();
+        };
 
         return $this;
     }

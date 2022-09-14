@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace LaravelJsonApi\Exceptions\Tests\Integration;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Exceptions\ExceptionParser;
@@ -43,7 +44,7 @@ class AcceptHeaderTest extends TestCase
         Route::middleware('api')->get('/test', function () {
             throw new HttpException(
                 418,
-                "I think I might be a teapot.",
+                'I think I might be a teapot.',
             );
         });
 
@@ -161,6 +162,48 @@ class AcceptHeaderTest extends TestCase
             ->assertStatus(418)
             ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
             ->assertSee('teapot');
+    }
+
+    /**
+     * @see https://github.com/laravel-json-api/laravel/issues/204
+     */
+    public function testAcceptsMiddlewareWhenRouteNotFound(): void
+    {
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsMiddleware('foo', 'api')
+            ->renderable();
+
+        $response = $this->get('/blah', ['Accept' => '*/*']);
+        $response->assertStatus(404)->assertSee('Not Found');
+
+        // @TODO remove once Laravel 8 is no longer supported (8 doesn't add the header)
+        if (version_compare(Application::VERSION, '9.0.0') >= 0) {
+            $response->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+        }
+    }
+
+    public function testAcceptsMiddlewareWhenRouteNotFoundWithJsonApiMediaType(): void
+    {
+        $expected = [
+            'errors' => [
+                [
+                    'title' => 'Not Found',
+                    'status' => '404',
+                ]
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        Handler::$testRenderer = ExceptionParser::make()
+            ->acceptsMiddleware('foo', 'api')
+            ->renderable();
+
+        $this->get('/blah', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(404)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
     }
 
     /**

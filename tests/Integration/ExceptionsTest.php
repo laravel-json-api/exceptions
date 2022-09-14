@@ -22,7 +22,7 @@ namespace LaravelJsonApi\Exceptions\Tests\Integration;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Contracts\Translation\Translator;
 use Illuminate\Foundation\Http\Exceptions\MaintenanceModeException;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Arr;
@@ -30,6 +30,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Validator;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -445,6 +446,9 @@ class ExceptionsTest extends TestCase
 
         $validator = $this->createMock(Validator::class);
         $validator->method('errors')->willReturn($messages);
+        $validator->method('getTranslator')->willReturnCallback(
+            fn() => $this->app->make(Translator::class)
+        );
 
         $this->ex = new ValidationException($validator);
 

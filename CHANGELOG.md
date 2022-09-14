@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## [1.1.1] - 2022-09-14
+
+### Fixed
+
+- [laravel-json-api#204](https://github.com/laravel-json-api/laravel/issues/204) Fixed `acceptsMiddleware` functionality
+  when there is no matched route on the request.
+
 ## [1.1.0] - 2022-02-09
 
 ### Added
