@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace LaravelJsonApi\Exceptions\Tests\Integration;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use LaravelJsonApi\Exceptions\ExceptionParser;
@@ -172,10 +173,13 @@ class AcceptHeaderTest extends TestCase
             ->acceptsMiddleware('foo', 'api')
             ->renderable();
 
-        $this->get('/blah', ['Accept' => '*/*'])
-            ->assertStatus(404)
-            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
-            ->assertSee('Not Found');
+        $response = $this->get('/blah', ['Accept' => '*/*']);
+        $response->assertStatus(404)->assertSee('Not Found');
+
+        // @TODO remove once Laravel 8 is no longer supported (8 doesn't add the header)
+        if (version_compare(Application::VERSION, '9.0.0') >= 0) {
+            $response->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+        }
     }
 
     public function testAcceptsMiddlewareWhenRouteNotFoundWithJsonApiMediaType(): void
