@@ -187,6 +187,8 @@ class AcceptHeaderTest extends TestCase
         $expected = [
             'errors' => [
                 [
+                    // @TODO this detail has been added at some point in Laravel 9.
+//                    'detail' => 'The route blah could not be found.',
                     'title' => 'Not Found',
                     'status' => '404',
                 ]
@@ -203,7 +205,7 @@ class AcceptHeaderTest extends TestCase
         $this->get('/blah', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(404)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertExactJson($expected);
+            ->assertJson($expected); // @TODO put back to `assertExactJson` when min version is Laravel 9
     }
 
     /**

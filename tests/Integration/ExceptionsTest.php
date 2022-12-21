@@ -62,6 +62,8 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
+                    // @TODO added in Laravel 9
+//                    'detail' => 'The route foobar could not be found.',
                     'status' => '404',
                     'title' => 'Not Found',
                 ],
@@ -74,7 +76,7 @@ class ExceptionsTest extends TestCase
         $this->get('/foobar', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(404)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertExactJson($expected);
+            ->assertJson($expected); // @TODO revert to `assertExactJson` when using only Laravel 9
     }
 
     public function testMethodNotAllowed(): void
@@ -82,7 +84,8 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
-                    'detail' => 'The POST method is not supported for this route. Supported methods: GET, HEAD.',
+                    // @TODO detail has changed in Laravel 9
+//                    'detail' => 'The POST method is not supported for this route. Supported methods: GET, HEAD.',
                     'status' => '405',
                     'title' => 'Method Not Allowed',
                 ],
@@ -95,7 +98,7 @@ class ExceptionsTest extends TestCase
         $this->post('/test', [], ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(405)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertExactJson($expected);
+            ->assertJson($expected); // @TODO revert back to `assertExactJson`
     }
 
     /**
