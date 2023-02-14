@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright 2022 Cloud Creativity Limited
+ * Copyright 2023 Cloud Creativity Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@ declare(strict_types=1);
 
 namespace LaravelJsonApi\Exceptions\Tests\Integration;
 
-use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Translation\Translator;
-use Illuminate\Foundation\Http\Exceptions\MaintenanceModeException;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -62,8 +60,7 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
-                    // @TODO added in Laravel 9
-//                    'detail' => 'The route foobar could not be found.',
+                    'detail' => 'The route foobar could not be found.',
                     'status' => '404',
                     'title' => 'Not Found',
                 ],
@@ -76,7 +73,7 @@ class ExceptionsTest extends TestCase
         $this->get('/foobar', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(404)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertJson($expected); // @TODO revert to `assertExactJson` when using only Laravel 9
+            ->assertExactJson($expected);
     }
 
     public function testMethodNotAllowed(): void
@@ -84,8 +81,7 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
-                    // @TODO detail has changed in Laravel 9
-//                    'detail' => 'The POST method is not supported for this route. Supported methods: GET, HEAD.',
+                    'detail' => 'The POST method is not supported for route test. Supported methods: GET, HEAD.',
                     'status' => '405',
                     'title' => 'Method Not Allowed',
                 ],
@@ -98,7 +94,7 @@ class ExceptionsTest extends TestCase
         $this->post('/test', [], ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(405)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertJson($expected); // @TODO revert back to `assertExactJson`
+            ->assertExactJson($expected);
     }
 
     /**
@@ -158,34 +154,12 @@ class ExceptionsTest extends TestCase
 
     public function testMaintenanceMode(): void
     {
-        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60, "We'll be back soon.");
+        $this->ex = new HttpException(503, 'We are down for maintenance.');
 
         $expected = [
             'errors' => [
                 [
-                    'title' => 'Service Unavailable',
-                    'detail' => "We'll be back soon.",
-                    'status' => '503',
-                ],
-            ],
-            'jsonapi' => [
-                'version' => '1.0',
-            ],
-        ];
-
-        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
-            ->assertStatus(503)
-            ->assertHeader('Content-Type', 'application/vnd.api+json')
-            ->assertExactJson($expected);
-    }
-
-    public function testMaintenanceModeWithoutMessage(): void
-    {
-        $this->ex = new MaintenanceModeException(Carbon::now()->getTimestamp(), 60, '');
-
-        $expected = [
-            'errors' => [
-                [
+                    'detail' => 'We are down for maintenance.',
                     'title' => 'Service Unavailable',
                     'status' => '503',
                 ],
