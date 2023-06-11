@@ -27,8 +27,8 @@
         "ext-json": "*",
         "illuminate/contracts": "^10.0",
         "illuminate/pipeline": "^10.0",
-        "laravel-json-api/core": "^3.0",
-        "laravel-json-api/validation": "^3.0"
+        "laravel-json-api/core": "^4.0",
+        "laravel-json-api/validation": "^4.0"
     },
     "require-dev": {
         "laravel-json-api/testing": "^2.0",
@@ -51,7 +51,7 @@
             "dev-3.x": "3.x-dev"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
         "sort-packages": true
