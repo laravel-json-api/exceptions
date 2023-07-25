@@ -54,9 +54,9 @@ class ValidationExceptionHandler
     public function handle(Throwable $ex, Closure $next): ErrorResponse
     {
         if ($ex instanceof ValidationException) {
-            return new ErrorResponse(
+            return (new ErrorResponse(
                 $this->toErrors($ex)
-            );
+            ))->withStatus($ex->status);
         }
 
         return $next($ex);
