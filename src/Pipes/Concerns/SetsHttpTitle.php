@@ -24,11 +24,10 @@ use Illuminate\Http\Response;
 
 trait SetsHttpTitle
 {
-
     /**
-     * @var Translator
+     * @var Translator|null
      */
-    private Translator $translator;
+    private ?Translator $translator = null;
 
     /**
      * @param int|null $status
@@ -37,7 +36,8 @@ trait SetsHttpTitle
     private function getTitle(?int $status): ?string
     {
         if ($status && isset(Response::$statusTexts[$status])) {
-            return $this->translator->get(Response::$statusTexts[$status]);
+            $title = Response::$statusTexts[$status];
+            return $this->translator?->get($title) ?? $title;
         }
 
         return null;
