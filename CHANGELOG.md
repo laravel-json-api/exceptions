@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## [2.0.1] - 2023-07-29
+
+### Fixed
+
+- [#3](https://github.com/laravel-json-api/exceptions/issues/3) Ensure HTTP status is correctly set when the status on a
+  validation exception is not `422`.
+
 ## [2.0.0] - 2023-02-14
 
 ### Changed
