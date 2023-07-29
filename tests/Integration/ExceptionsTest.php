@@ -455,6 +455,68 @@ class ExceptionsTest extends TestCase
             ->assertExactJson($expected);
     }
 
+    /**
+     * If the validator has a status set, we ensure the response and JSON:API errors have that status.
+     *
+     * @see https://github.com/laravel-json-api/exceptions/issues/3
+     */
+    public function testValidationExceptionWithStatus(): void
+    {
+        $this->ex = ValidationException::withMessages([
+            'data.email' => 'Hello teapot@example.com',
+        ])->status(418);
+
+        $expected = [
+            'errors' => [
+                [
+                    'detail' => 'Hello teapot@example.com',
+                    'source' => ['pointer' => '/data/email'],
+                    'status' => '418',
+                    'title' => "I'm a teapot",
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this
+            ->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(418)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
+    /**
+     * If the validator has a status set, we ensure the response and JSON:API errors have that status.
+     *
+     * @see https://github.com/laravel-json-api/exceptions/issues/3
+     */
+    public function testValidationExceptionWithStatusThatDoesNotHaveTitle(): void
+    {
+        $this->ex = ValidationException::withMessages([
+            'data.email' => 'Too many attempts',
+        ])->status(419);
+
+        $expected = [
+            'errors' => [
+                [
+                    'detail' => 'Too many attempts',
+                    'source' => ['pointer' => '/data/email'],
+                    'status' => '419',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(419)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
+
     public function testDefaultExceptionWithoutDebug(): void
     {
         config()->set('app.debug', false);
