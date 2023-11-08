@@ -28,6 +28,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use LaravelJsonApi\Core\Document\Error;
+use LaravelJsonApi\Core\Document\ErrorList;
 use LaravelJsonApi\Core\Exceptions\JsonApiException;
 use LaravelJsonApi\Core\Responses\ErrorResponse;
 use Throwable;
@@ -297,20 +298,38 @@ final class ExceptionParser
      * Get the default JSON API error.
      *
      * @param Throwable $ex
-     * @return Error
+     * @return Error|ErrorList
      */
-    private function getDefaultError(Throwable $ex): Error
+    private function getDefaultError(Throwable $ex): Error|ErrorList
     {
         if ($this->default) {
             return $this->default;
         }
 
+        $errors = [];
+        $debug = config('app.debug');
+
+        do {
+            $errors[] = $this->convertExceptionToError($ex, $debug);
+        } while ($ex = $ex->getPrevious());
+
+        return new ErrorList(...$errors);
+    }
+
+    /**
+     * @param Throwable $ex
+     * @param bool $debug
+     * @return Error
+     */
+    private function convertExceptionToError(Throwable $ex, bool $debug): Error
+    {
         $error = Error::make()
             ->setStatus(500)
             ->setTitle(__(Response::$statusTexts[500]));
 
-        if (config('app.debug')) {
-            $error->setCode($ex->getCode())
+        if ($debug) {
+            $error
+                ->setCode($ex->getCode())
                 ->setDetail($ex->getMessage())
                 ->setMeta($this->convertExceptionToMeta($ex));
         }
@@ -325,13 +344,13 @@ final class ExceptionParser
      * puts into its JSON representation of an exception when in debug mode.
      *
      * @param Throwable $ex
-     * @return array
+     * @return array<string, mixed>
      * @see \Illuminate\Foundation\Exceptions\Handler::convertExceptionToArray()
      */
     private function convertExceptionToMeta(Throwable $ex): array
     {
         return [
-            'exception' => get_class($ex),
+            'exception' => $ex::class,
             'file' => $ex->getFile(),
             'line' => $ex->getLine(),
             'trace' => Collection::make($ex->getTrace())

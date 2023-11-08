@@ -541,6 +541,9 @@ class ExceptionsTest extends TestCase
             ->assertExactJson($expected);
     }
 
+    /**
+     * @return void
+     */
     public function testDefaultExceptionWithDebug(): void
     {
         config()->set('app.debug', true);
@@ -569,10 +572,87 @@ class ExceptionsTest extends TestCase
             ],
         ];
 
-        $this->get('/test', ['Accept' => 'application/vnd.api+json'])
+        $this
+            ->get('/test', ['Accept' => 'application/vnd.api+json'])
             ->assertStatus(500)
             ->assertHeader('Content-Type', 'application/vnd.api+json')
             ->assertExactJson($expected);
     }
 
+    /**
+     * @return void
+     */
+    public function testDefaultExceptionWithPreviousExceptionAndWithDebug(): void
+    {
+        config()->set('app.debug', true);
+
+        $this->ex = $ex = new \LogicException(
+            message: 'Boom.',
+            code: 99,
+            previous: $previous1 = new \RuntimeException(
+                message: 'Blah!',
+                code: 98,
+                previous: $previous2 = new \Exception(
+                    message: 'Baz!',
+                    code: 97
+                ),
+            ),
+        );
+
+        $expected = [
+            'errors' => [
+                [
+                    'code' => (string) $ex->getCode(),
+                    'detail' => $ex->getMessage(),
+                    'meta' => [
+                        'exception' => $ex::class,
+                        'file' => $ex->getFile(),
+                        'line' => $ex->getLine(),
+                        'trace' => Collection::make($ex->getTrace())
+                            ->map(fn($trace) => Arr::except($trace, ['args']))
+                            ->all(),
+                    ],
+                    'status' => '500',
+                    'title' => 'Internal Server Error',
+                ],
+                [
+                    'code' => (string) $previous1->getCode(),
+                    'detail' => $previous1->getMessage(),
+                    'meta' => [
+                        'exception' => $previous1::class,
+                        'file' => $previous1->getFile(),
+                        'line' => $previous1->getLine(),
+                        'trace' => Collection::make($previous1->getTrace())
+                            ->map(fn($trace) => Arr::except($trace, ['args']))
+                            ->all(),
+                    ],
+                    'status' => '500',
+                    'title' => 'Internal Server Error',
+                ],
+                [
+                    'code' => (string) $previous2->getCode(),
+                    'detail' => $previous2->getMessage(),
+                    'meta' => [
+                        'exception' => $previous2::class,
+                        'file' => $previous2->getFile(),
+                        'line' => $previous2->getLine(),
+                        'trace' => Collection::make($previous2->getTrace())
+                            ->map(fn($trace) => Arr::except($trace, ['args']))
+                            ->all(),
+                    ],
+                    'status' => '500',
+                    'title' => 'Internal Server Error',
+                ],
+            ],
+            'jsonapi' => [
+                'version' => '1.0',
+            ],
+        ];
+
+        $this
+            ->get('/test', ['Accept' => 'application/vnd.api+json'])
+            ->assertStatus(500)
+            ->assertHeader('Content-Type', 'application/vnd.api+json')
+            ->assertExactJson($expected);
+    }
 }
