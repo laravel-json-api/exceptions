@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file. This project adheres to
 [Semantic Versioning](http://semver.org/) and [this changelog format](http://keepachangelog.com/).
 
+## Unreleased
+
+## [2.1.0] - 2023-11-08
+
+### Added
+
+- Debug exception output now includes any previous exceptions.
+
 ## [2.0.1] - 2023-07-29
 
 ### Fixed
