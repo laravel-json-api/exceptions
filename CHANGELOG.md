@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file. This projec
 
 ## Unreleased
 
+## [2.1.0] - 2023-11-08
+
 ### Added
 
 - Debug exception output now includes any previous exceptions.
