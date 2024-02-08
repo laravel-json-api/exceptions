@@ -27,8 +27,8 @@
         "ext-json": "*",
         "illuminate/contracts": "^10.0",
         "illuminate/pipeline": "^10.0",
-        "laravel-json-api/core": "^4.0",
-        "laravel-json-api/validation": "^4.0"
+        "laravel-json-api/core": "^5.0",
+        "laravel-json-api/validation": "^5.0"
     },
     "require-dev": {
         "laravel-json-api/testing": "^2.0",
@@ -48,7 +48,7 @@
     "extra": {
         "branch-alias": {
             "dev-develop": "2.x-dev",
-            "dev-3.x": "3.x-dev"
+            "dev-next": "4.x-dev"
         }
     },
     "minimum-stability": "dev",
