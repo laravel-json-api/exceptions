@@ -364,7 +364,7 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
-                    'detail' => 'Your request is badly formatted.',
+                    'detail' => 'Bad request.',
                     'status' => '400',
                     'title' => 'Bad Request',
                 ],
@@ -387,6 +387,7 @@ class ExceptionsTest extends TestCase
         $expected = [
             'errors' => [
                 [
+                    'detail' => 'Bad request.',
                     'status' => '400',
                     'title' => 'Bad Request',
                 ],

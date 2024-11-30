@@ -36,7 +36,7 @@ class ValidationExceptionHandler
      */
     public function __construct(
         private readonly Factory $factory,
-        Translator $translator = null,
+        ?Translator $translator = null,
     ) {
         $this->translator = $translator;
     }
