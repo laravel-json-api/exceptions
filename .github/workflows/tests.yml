@@ -21,6 +21,9 @@ jobs:
         php: [ 8.2, 8.3, 8.4 ]
         core: [ '4.3.2', '5.2' ]
         laravel: [ 11, 12 ]
+        exclude:
+          - laravel: 12
+            core: '4.3.2'
 
     steps:
       - name: Checkout Code
