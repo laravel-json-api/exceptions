@@ -27,11 +27,11 @@
         "ext-json": "*",
         "illuminate/contracts": "^11.0|^12.0",
         "illuminate/pipeline": "^11.0|^12.0",
-        "laravel-json-api/core": "^4.3.2|^5.0.1",
+        "laravel-json-api/core": "^4.3.2|^5.2",
         "laravel-json-api/validation": "^4.2"
     },
     "require-dev": {
-        "laravel-json-api/testing": "^3.0",
+        "laravel-json-api/testing": "^3.1",
         "orchestra/testbench": "^9.0|^10.0",
         "phpunit/phpunit": "^10.5|^11.5.3"
     },
@@ -50,7 +50,7 @@
             "dev-develop": "3.x-dev"
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
         "sort-packages": true
