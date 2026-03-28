@@ -150,10 +150,13 @@ class AcceptHeaderTest extends TestCase
             ->acceptsMiddleware('foo', 'bar')
             ->renderable();
 
-        $this->get('/test', ['Accept' => '*/*'])
+        $response = $this->get('/test', ['Accept' => '*/*']);
+
+        $response
             ->assertStatus(418)
-            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
             ->assertSee('teapot');
+
+        $this->assertSame('text/html; charset=utf-8', strtolower($response->headers->get('Content-Type')));
     }
 
     /**
@@ -167,11 +170,7 @@ class AcceptHeaderTest extends TestCase
 
         $response = $this->get('/blah', ['Accept' => '*/*']);
         $response->assertStatus(404)->assertSee('Not Found');
-
-        // @TODO remove once Laravel 8 is no longer supported (8 doesn't add the header)
-        if (version_compare(Application::VERSION, '9.0.0') >= 0) {
-            $response->assertHeader('Content-Type', 'text/html; charset=UTF-8');
-        }
+        $this->assertSame('text/html; charset=utf-8', strtolower($response->headers->get('Content-Type')));
     }
 
     public function testAcceptsMiddlewareWhenRouteNotFoundWithJsonApiMediaType(): void
@@ -223,10 +222,12 @@ class AcceptHeaderTest extends TestCase
             ->accept(fn(\Throwable $ex, Request $request) => false)
             ->renderable();
 
-        $this->get('/test', ['Accept' => '*/*'])
-            ->assertStatus(418)
-            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
+        $response = $this->get('/test', ['Accept' => '*/*']);
+
+        $response->assertStatus(418)
             ->assertSee('teapot');
+
+        $this->assertSame('text/html; charset=utf-8', strtolower($response->headers->get('Content-Type')));
     }
 
     public function testAcceptFalseWithJsonApiAcceptHeader(): void
@@ -279,9 +280,12 @@ class AcceptHeaderTest extends TestCase
 
     public function testHtml(): void
     {
-        $this->get('/test', ['Accept' => '*/*'])
+        $response = $this->get('/test', ['Accept' => '*/*']);
+
+        $response
             ->assertStatus(418)
-            ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
             ->assertSee('teapot');
+
+        $this->assertSame('text/html; charset=utf-8', strtolower($response->headers->get('Content-Type')));
     }
 }
