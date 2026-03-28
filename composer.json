@@ -19,7 +19,7 @@
         },
         {
             "name": "Christopher Gammie",
-            "email": "contact@gammie.co.uk"
+            "email": "chris@cloudcreativity.co.uk"
         }
     ],
     "require": {
@@ -31,7 +31,7 @@
         "laravel-json-api/validation": "^4.4"
     },
     "require-dev": {
-        "laravel-json-api/testing": "^3.1",
+        "laravel-json-api/testing": "^3.2",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^10.5|^11.5.3"
     },
@@ -50,7 +50,7 @@
             "dev-develop": "3.x-dev"
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "config": {
         "sort-packages": true
